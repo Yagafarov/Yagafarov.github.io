@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dinmuhammad Yagafarov - Ta'lim va Frontend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-day: #f6fafd;
+            --text-day: #222;
+            --bg-night: #151c24;
+            --text-night: #e0e0e0;
+            --primary-color: #007acc;
+            --secondary-color: #00a8ff;
+            --accent: #ffe082;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --transition-speed: 0.5s;
+            --border-radius: 16px;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-day);
+            color: var(--text-day);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 2rem 1rem;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            line-height: 1.6;
+        }
+        body.night {
+            background-color: var(--bg-night);
+            color: var(--text-night);
+        }
+        .parallax-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            background: linear-gradient(120deg, #e0f3ff 0%, #f9f9f9 100%);
+            transition: background 0.7s;
+        }
+        body.night .parallax-bg {
+            background: linear-gradient(120deg, #1a2a3a 0%, #232526 100%);
+        }
+        .parallax-circle {
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.13;
+            pointer-events: none;
+            z-index: -1;
+            transition: background 0.7s, transform 0.7s ease-out;
+        }
+        .circle1 { width: 400px; height: 400px; background: #007acc; top: 5%; left: -120px;}
+        .circle2 { width: 250px; height: 250px; background: #00b7ff; top: 60%; right: -100px;}
+        .circle3 { width: 170px; height: 170px; background: #005a99; top: 35%; left: 60%;}
+        body.night .circle1 { background: #003366;}
+        body.night .circle2 { background: #005a99;}
+        body.night .circle3 { background: #001a33;}
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            position: relative;
+            padding-top: 1rem;
+        }
+        .profile-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .profile-photo {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 24px rgba(0, 122, 204, 0.18);
+            border: 3px solid var(--primary-color);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1;
+            position: relative;
+        }
+        .profile-container:hover .profile-photo {
+            transform: scale(1.05) rotate(3deg);
+            box-shadow: 0 8px 32px rgba(0, 122, 204, 0.3);
+        }
+        .profile-photo-bg {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0.15;
+            top: -5px;
+            left: -5px;
+            z-index: 0;
+            animation: pulse 3s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.1); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.15; }
+        }
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.1rem;
+            margin-bottom: 0.3rem;
+            line-height: 1.2;
+            text-align: center;
+            position: relative;
+            display: inline-block;
+        }
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), transparent);
+            border-radius: 2px;
+        }
+        .tagline {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        body.night .tagline {
+            color: #aaa;
+        }
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2em;
+            font-size: 1.01rem;
+            margin-bottom: 1em;
+            background: rgba(0, 122, 204, 0.08);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+        body.night .contact-info {
+            background: rgba(0, 122, 204, 0.15);
+        }
+        .contact-info span {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.1em;
+            margin-bottom: 1.7em;
+            flex-wrap: wrap;
+        }
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f4faff;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,122,204,0.10);
+            transition: transform 0.2s, background 0.3s, color 0.3s, box-shadow 0.3s;
+            border: none;
+            outline: none;
+            text-decoration: none;
+        }
+        .social-link:hover, .social-link:focus {
+            background: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,122,204,0.25);
+            transform: scale(1.12) rotate(-3deg);
+            text-decoration: none;
+        }
+        .social-link svg {
+            width: 24px;
+            height: 24px;
+            display: block;
+            fill: currentColor;
+        }
+        /* --- TA'LIM BO'LIMI URG'ULI --- */
+        .education-highlight {
+            background: linear-gradient(135deg, rgba(0, 122, 204, 0.08) 0%, rgba(0, 122, 204, 0.03) 100%);
+            border-radius: var(--border-radius);
+            padding: 2.2rem 2rem 2rem 2rem;
+            margin-bottom: 2.3rem;
+            border-left: 7px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        body.night .education-highlight {
+            background: linear-gradient(135deg, rgba(0, 122, 204, 0.15) 0%, rgba(0, 122, 204, 0.08) 100%);
+        }
+        .education-highlight::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23007acc' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.2;
+            z-index: -1;
+        }
+        .education-highlight h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .education-highlight .edu-icon {
+            display: inline-block;
+            vertical-align: middle;
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 122, 204, 0.15);
+            border-radius: 50%;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .education-highlight ul {
+            padding-left: 1.2rem;
+            font-size: 1.08rem;
+        }
+        .education-highlight li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        .education-highlight li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            margin-right: 10px;
+            margin-top: 2px;
+        }
+        .education-highlight strong {
+            color: var(--primary-color);
+        }
+        /* --- Qolgan sectionlar --- */
+        section {
+            background: rgba(255,255,255,0.85);
+            padding: 1.8rem 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2.2rem;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-left: 4px solid var(--primary-color);
+        }
+        section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        body.night section {
+            background: rgba(30,30,30,0.6);
+            box-shadow: 0 5px 20px rgba(255,255,255,0.05);
+        }
+        body.night section:hover {
+            box-shadow: 0 12px 30px rgba(255,255,255,0.1);
+        }
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h2 i {
+            font-size: 1.3rem;
+            width: 36px;
+            height: 36px;
+            background: rgba(0, 122, 204, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        ul {
+            padding-left: 1.2rem;
+            list-style-type: none;
+        }
+        ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 1.05rem;
+        }
+        ul li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+            position: relative;
+        }
+        a:hover, a:focus {
+            text-decoration: none;
+            color: #005a99;
+            outline: none;
+        }
+        a::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: width 0.3s;
+        }
+        a:hover::after {
+            width: 100%;
+        }
+        .skill-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .skill-badge {
+            background: rgba(0, 122, 204, 0.1);
+            color: var(--primary-color);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .skill-badge:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .skill-badge i {
+            font-size: 0.9rem;
+        }
+        .project-card {
+            background: rgba(0, 122, 204, 0.05);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            border-left: 3px solid var(--primary-color);
+        }
+        .project-card:hover {
+            transform: translateX(5px);
+            background: rgba(0, 122, 204, 0.1);
+        }
+        .project-card h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-color);
+        }
+        .project-card p {
+            margin: 0.5rem 0;
+        }
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .tech-tag {
+            background: rgba(0, 122, 204, 0.1);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #888888;
+            margin-top: 4rem;
+            user-select: none;
+            font-style: italic;
+            letter-spacing: 0.02em;
+            z-index: 1;
+            position: relative;
+            padding: 1.5rem 0;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        body.night footer {
+            color: #aaa;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .scroll-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .scroll-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scroll-top:hover {
+            background: #0066b3;
+            transform: translateY(-3px);
+        }
+        @media (max-width: 700px) {
+            section, .education-highlight {
+                padding: 1.2rem 1rem;
+                border-radius: 12px;
+            }
+            h1 { font-size: 1.8rem; }
+            h2, .education-highlight h2 { font-size: 1.2rem; }
+            .contact-info { font-size: 0.95rem; padding: 0.8rem; }
+            .profile-photo { width: 110px; height: 110px; }
+        }
+        @media (max-width: 600px) {
+            .profile-photo { width: 100px; height: 100px; }
+            .social-link { width: 44px; height: 44px; }
+            .social-link svg { width: 20px; height: 20px; }
+            .scroll-top {
+                width: 40px;
+                height: 40px;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+        #toggle-theme {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 122, 204, 0.5);
+            transition: all 0.3s;
+            user-select: none;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+        }
+        #toggle-theme:hover {
+            transform: rotate(15deg);
+            box-shadow: 0 6px 16px rgba(0, 122, 204, 0.6);
+        }
+        #toggle-theme svg {
+            width: 26px;
+            height: 26px;
+            display: block;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="parallax-bg"></div>
+    <div class="parallax-circle circle1"></div>
+    <div class="parallax-circle circle2"></div>
+    <div class="parallax-circle circle3"></div>
+    
+    <button id="toggle-theme" aria-label="Tun va Kunduz rejimini almashtirish" title="Tun va Kunduz rejimini almashtirish">
+        <span id="theme-icon">
+            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="5" fill="#FFD600"/>
+                <g stroke="#FFD600" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="4"/>
+                    <line x1="12" y1="20" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="4" y2="12"/>
+                    <line x1="20" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </g>
+            </svg>
+            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" style="display:none;">
+                <path d="M21 12.79A9 9 0 0 1 11.21 3c0 .34.02.67.05 1A7 7 0 1 0 20 13.74c.33.03.66.05 1 .05z" fill="#FFC107"/>
+            </svg>
+        </span>
+    </button>
+    
+    <div class="scroll-top" id="scrollTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+    
+    <header>
+        <div class="profile-container">
+            <div class="profile-photo-bg"></div>
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80"
+                 alt="Dinmuhammad Yagafarov rasmi" class="profile-photo" />
+        </div>
+        <h1>Dinmuhammad Yagafarov</h1>
+        <div class="tagline">Frontend Developer & Robototexnika Mutaxassisi</div>
+        <div class="contact-info">
+            <span><i class="fas fa-envelope"></i> <a href="mailto:dinmuhammad.y@example.com">dinmuhammad.y@example.com</a></span>
+            <span><i class="fas fa-phone"></i> +998 90 123 45 67</span>
+            <span><i class="fas fa-map-marker-alt"></i> Toshkent, O'zbekiston</span>
+        </div>
+        <div class="social-links">
+            <a class="social-link" href="https://t.me/yourusername" target="_blank" title="Telegram" aria-label="Telegram">
+                <i class="fab fa-telegram-plane"></i>
+            </a>
+            <a class="social-link" href="https://github.com/yourusername" target="_blank" title="GitHub" aria-label="GitHub">
+                <i class="fab fa-github"></i>
+            </a>
+            <a class="social-link" href="https://linkedin.com/in/yourusername" target="_blank" title="LinkedIn" aria-label="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a class="social-link" href="https://twitter.com/yourusername" target="_blank" title="Twitter" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a class="social-link" href="https://yourwebsite.com" target="_blank" title="Websayt" aria-label="Websayt">
+                <i class="fas fa-globe"></i>
+            </a>
+        </div>
+    </header>
+    
+    <!-- ASOSIY URGU TA'LIMDA -->
+    <section class="education-highlight" id="education" aria-labelledby="education-title">
+        <h2 id="education-title">
+            <span class="edu-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </span>
+            Ta'lim — Mening Asosiy Ustuvorligim
+        </h2>
+        <ul>
+            <li><strong>Bakalavr:</strong> Kompyuter Muhandisligi, <a href="#">Toshkent Axborot Texnologiyalari Universiteti</a> (2016–2020)</li>
+            <li><strong>Magistratura:</strong> Sun'iy intellekt va robototexnika, <a href="#">O'zbekiston Milliy Universiteti</a> (2020–2022)</li>
+            <li><strong>Qo'shimcha kurslar:</strong> Frontend (HTML, CSS, JS, React), Coursera, Udemy</li>
+        </ul>
+        <p>
+            <strong>Ta'lim</strong> — bu mening kasbiy va shaxsiy rivojlanishimning asosi. Har doim yangi bilim va texnologiyalarni o'rganishga intilaman. O'qish davomida nafaqat nazariy, balki amaliy loyihalarda ham faol qatnashganman.
+        </p>
+    </section>
+    
+    <!-- Qolgan bo'limlar -->
+    <section id="about" aria-labelledby="about-title">
+        <h2 id="about-title">
+            <i class="fas fa-user"></i>
+            Haqqimda
+        </h2>
+        <p>Men frontend va robototexnika sohasida chuqur nazariy bilim va amaliy tajribaga ega mutaxassisman. Zamonaviy web-texnologiyalar (HTML, CSS, JavaScript, React) va mikrokontrollerlar (Arduino, Raspberry Pi) asosida murakkab tizimlar yaratish bilan shug'ullanaman. Ilmiy yondashuv va tizimli fikrlash mening asosiy kuchimdir.</p>
+        <p>Har bir loyihada foydalanuvchi tajribasini (UX) o'ylab, qulay va samarali echimlarni ishlab chiqishga harakat qilaman. Jamoaviy ishlash qobiliyatim yuqori, loyihalarni vaqtida yetkazib berish va sifatli ishlashga intilaman.</p>
+    </section>
+    
+    <section id="skills" aria-labelledby="skills-title">
+        <h2 id="skills-title">
+            <i class="fas fa-laptop-code"></i>
+            Ko'nikmalar
+        </h2>
+        <ul>
+            <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript, React, Vue.js, Responsive Dizayn</li>
+            <li><strong>Robototexnika:</strong> Arduino, Raspberry Pi, Sensorlar, Avtomatlashtirish</li>
+            <li><strong>Dasturlash tillari:</strong> JavaScript, Python, C++</li>
+            <li><strong>Boshqa:</strong> Git, UI/UX tamoyillari, Webpack, REST API</li>
+        </ul>
+        
+        <div class="skill-badges">
+            <div class="skill-badge"><i class="fab fa-html5"></i> HTML5</div>
+            <div class="skill-badge"><i class="fab fa-css3-alt"></i> CSS3</div>
+            <div class="skill-badge"><i class="fab fa-js"></i> JavaScript</div>
+            <div class="skill-badge"><i class="fab fa-react"></i> React</div>
+            <div class="skill-badge"><i class="fab fa-vuejs"></i> Vue.js</div>
+            <div class="skill-badge"><i class="fas fa-mobile-alt"></i> Responsive</div>
+            <div class="skill-badge"><i class="fas fa-robot"></i> Arduino</div>
+            <div class="skill-badge"><i class="fas fa-microchip"></i> Raspberry Pi</div>
+            <div class="skill-badge"><i class="fab fa-python"></i> Python</div>
+            <div class="skill-badge"><i class="fab fa-git-alt"></i> Git</div>
+        </div>
+    </section>
+    
+    <section id="experience" aria-labelledby="experience-title">
+        <h2 id="experience-title">
+            <i class="fas fa-briefcase"></i>
+            Ish Tajribasi
+        </h2>
+        <ul>
+            <li>
+                <strong>Frontend Developer</strong> — <a href="#">Innovatsion Texnologiyalar Markazi</a> (2022 - hozirgi)
+                <ul>
+                    <li>Interaktiv web ilovalar yaratish va optimallashtirish</li>
+                    <li>Mobil va desktop platformalar uchun moslashtirish</li>
+                    <li>React asosida yangi modullarni ishlab chiqish</li>
+                    <li>Jamoaviy loyihalarda ishtirok etish va kodni tekshirish</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Robototexnika Muhandisi</strong> — <a href="#">TexnoLab Innovatsion Markazi</a> (2020 - 2022)
+                <ul>
+                    <li>Arduino asosida robot prototiplari ishlab chiqish</li>
+                    <li>Sensorlar va aktuatorlarni dasturlash</li>
+                    <li>O'quv dasturlari uchun robototexnika qo'llanmalarini tayyorlash</li>
+                    <li>Avtomatlashtirilgan tizimlarni loyihalash</li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+    
+    <section id="projects" aria-labelledby="projects-title">
+        <h2 id="projects-title">
+            <i class="fas fa-folder-open"></i>
+            Loyihalar
+        </h2>
+        
+        <div class="project-card">
+            <h3><i class="fas fa-laptop-code"></i> Shaxsiy Portfolio Sayti</h3>
+            <p>React, HTML va CSS asosida yaratilgan zamonaviy portfolio sayti. Animatsiyalar, interaktiv elementlar va responsive dizayn bilan jihozlangan.</p>
+            <div class="tech-tags">
+                <span class="tech-tag">React</span>
+                <span class="tech-tag">CSS3</span>
+                <span class="tech-tag">Responsive</span>
+                <span class="tech-tag">Git</span>
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3><i class="fas fa-robot"></i> Robot Nazorat Tizimi</h3>
+            <p>Raspberry Pi va sensorlar asosida qurilgan robot nazorat tizimi. IoT texnologiyalari yordamida masofadan boshqarish imkoniyati.</p>
+            <div class="tech-tags">
+                <span class="tech-tag">Raspberry Pi</span>
+                <span class="tech-tag">Python</span>
+                <span class="tech-tag">IoT</span>
+                <span class="tech-tag">Sensors</span>
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3><i class="fas fa-shopping-cart"></i> E-commerce Platformasi</h3>
+            <p>Vue.js asosida yaratilgan to'liq funksionallikdagi onlayn do'kon. Mahsulotlar filtrlash, savat va to'lov tizimlari bilan jihozlangan.</p>
+            <div class="tech-tags">
+                <span class="tech-tag">Vue.js</span>
+                <span class="tech-tag">Node.js</span>
+                <span class="tech-tag">MongoDB</span>
+                <span class="tech-tag">REST API</span>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        &copy; 2025 Dinmuhammad Yagafarov | Barcha huquqlar himoyalangan
+    </footer>
+    
+    <script>
+        // Kun/Tun rejimi
+        const toggleBtn = document.getElementById('toggle-theme');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        
+        function updateThemeIcon() {
+            if(document.body.classList.contains('night')) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'inline';
+            } else {
+                sunIcon.style.display = 'inline';
+                moonIcon.style.display = 'none';
+            }
+        }
+        
+        toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('night');
+            updateThemeIcon();
+            // Tugmaga animatsiya
+            toggleBtn.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                toggleBtn.style.transform = 'rotate(0deg)';
+            }, 500);
+        });
+        
+        window.addEventListener('DOMContentLoaded', updateThemeIcon);
+        
+        // Parallax effekt
+        window.addEventListener('scroll', function() {
+            const scrollY = window.scrollY;
+            document.querySelector('.circle1').style.transform = `translateY(${scrollY * 0.15}px) rotate(${scrollY * 0.01}deg)`;
+            document.querySelector('.circle2').style.transform = `translateY(${scrollY * 0.25}px) rotate(${scrollY * 0.02}deg)`;
+            document.querySelector('.circle3').style.transform = `translateY(${scrollY * 0.18}px) rotate(${scrollY * 0.015}deg)`;
+        });
+        
+        // Yuqoriga qaytish tugmasi
+        const scrollTopBtn = document.getElementById('scrollTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollTopBtn.classList.add('visible');
+            } else {
+                scrollTopBtn.classList.remove('visible');
+            }
+        });
+        
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Bo'limlarga animatsiya
+        const sections = document.querySelectorAll('section');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        sections.forEach(section => {
+            section.style.opacity = 0;
+            section.style.transform = 'translateY(20px)';
+            section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

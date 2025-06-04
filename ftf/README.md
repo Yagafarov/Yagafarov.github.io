@@ -1,1 +1,0 @@
-# Yagafarov.github.io uchun sinov

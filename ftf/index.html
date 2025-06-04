@@ -1,194 +1,238 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Fizik Simulyator: To‘liq Ekran va Sharlar</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0; overflow: hidden; height: 100%;
-      background: #111;
-      font-family: Arial, sans-serif;
-    }
-    #info {
-      position: fixed;
-      top: 10px; left: 50%;
-      transform: translateX(-50%);
-      color: #0ff;
-      font-weight: bold;
-      text-shadow: 0 0 10px #0ff;
-      z-index: 10;
-      user-select: none;
-      pointer-events: none;
-    }
-    canvas {
-      display: block;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      outline: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haqiqiy Qo'lda Yozuv Animatsiyasi</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f8f8f8; /* Oq qog'ozga o'xshash fon */
+        }
+        canvas {
+            border: 1px solid #ccc; /* Qog'oz chekkasi effekti */
+            background-color: #fff; /* Qog'oz rangi */
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2); /* Yengil soya */
+        }
+    </style>
 </head>
 <body>
-  <div id="info">Sichqoncha bosish bilan yangi shar qo‘shing! (3D, gravitatsiya va to‘qnashuvlar)</div>
+    <canvas id="handwritingCanvas"></canvas>
 
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
-    import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+    <script>
+        const canvas = document.getElementById('handwritingCanvas');
+        const ctx = canvas.getContext('2d');
 
-    // Sahna, kamera, renderer
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111111);
+        canvas.width = 800;
+        canvas.height = 300;
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 8, 20);
+        const baseLineWidth = 2.5; // Asosiy chiziq qalinligi
+        const lineColor = "rgba(50, 50, 50, 0.9)"; // Qalamning to'q kulrang rangi
+        const animationSpeed = 0.04; // Chizish tezligi
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x111111);
-    renderer.shadowMap.enabled = true;
-    document.body.appendChild(renderer.domElement);
+        const jitterAmount = 1; // Nuqtalarni siljitish miqdori (qo'l tebranishi)
+        const lineWidthVariation = 1; // Chiziq qalinligining o'zgarish miqdori
 
-    // Kamera boshqaruvi
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+        let currentLetterIndex = 0;
+        let currentStrokeIndex = 0;
+        let currentPointProgress = 0;
 
-    // Yorug'liklar
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
+        // Har bir harf uchun chizish yo'llari (oldindan belgilangan nuqtalar)
+        // Nuqtalar qo'lda chizilgan estetika uchun biroz "qo'polroq" va kamroq mukammal bo'lishi mumkin.
+        const letterPaths = {
+            'A': [
+                [[20, 150], [50, 50], [80, 150]],
+                [[35, 100], [65, 100]]
+            ],
+            'n': [
+                [[100, 150], [100, 70], [130, 70], [130, 150]]
+            ],
+            'o': [
+                [[160, 110], [180, 70], [210, 70], [230, 110], [230, 150], [210, 190], [180, 190], [160, 150], [160, 110]]
+            ],
+            'd': [
+                [[260, 150], [260, 70], [290, 70], [310, 90], [310, 130], [290, 150], [260, 150]],
+                [[310, 150], [310, 50]]
+            ],
+            'r': [
+                [[340, 150], [340, 70], [360, 70], [360, 90]]
+            ],
+            'a': [
+                [[390, 150], [390, 110], [410, 70], [440, 70], [460, 110], [460, 150], [440, 190], [410, 190], [390, 150]],
+                [[460, 150], [460, 70]]
+            ]
+        };
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 20, 10);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    scene.add(dirLight);
+        const nameToDraw = "Anodra";
+        let letterOffsets = {};
+        let currentOffset = 0;
 
-    // Fizik dunyo
-    const world = new CANNON.World({
-      gravity: new CANNON.Vec3(0, -9.82, 0)
-    });
+        // Harflarning boshlang'ich pozitsiyalarini hisoblash
+        function calculateLetterOffsets() {
+            const letterSpacing = 20;
+            let currentXOffset = 0;
 
-    // Yer yuzasi (statik)
-    const groundBody = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
-      material: new CANNON.Material('groundMaterial')
-    });
-    groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
-    world.addBody(groundBody);
+            for (let i = 0; i < nameToDraw.length; i++) {
+                const char = nameToDraw[i];
+                const path = letterPaths[char];
+                if (path) {
+                    let minX = Infinity, maxX = -Infinity;
+                    // Harfning eng chap va eng o'ng nuqtasini topish
+                    path.forEach(stroke => {
+                        stroke.forEach(point => {
+                            minX = Math.min(minX, point[0]);
+                            maxX = Math.max(maxX, point[0]);
+                        });
+                    });
+                    const letterWidth = maxX - minX;
 
-    // Yer uchun Three.js obyekti
-    const groundGeo = new THREE.PlaneGeometry(40, 40);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8, metalness: 0.2 });
-    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-    groundMesh.rotation.x = -Math.PI/2;
-    groundMesh.receiveShadow = true;
-    scene.add(groundMesh);
+                    letterOffsets[char] = currentXOffset - minX; // Harfning boshlang'ich X koordinatasini saqlash
+                    currentXOffset += letterWidth + letterSpacing;
+                }
+            }
+            // Matnni markazga joylashtirish uchun umumiy ofsetni hisoblash
+            const totalWidth = currentXOffset - letterSpacing;
+            const centerOffset = (canvas.width - totalWidth) / 2;
 
-    // Sharlarni saqlash uchun massivlar
-    const spheres = [];
-    const sphereBodies = [];
+            for (const char in letterOffsets) {
+                letterOffsets[char] += centerOffset;
+            }
+        }
 
-    // Shar yaratish funksiyasi
-    function createSphere(position) {
-      const radius = 1 + Math.random() * 0.7;
-      const color = new THREE.Color().setHSL(Math.random(), 0.7, 0.5);
+        function getRandomJitter() {
+            return (Math.random() - 0.5) * 2 * jitterAmount; // -jitterAmount dan +jitterAmount gacha tasodifiy qiymat
+        }
 
-      // Three.js shar
-      const sphereGeo = new THREE.SphereGeometry(radius, 32, 32);
-      const sphereMat = new THREE.MeshStandardMaterial({
-        color: color,
-        roughness: 0.4,
-        metalness: 0.6,
-        emissive: color.clone().multiplyScalar(0.2),
-        emissiveIntensity: 0.5
-      });
-      const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-      sphereMesh.castShadow = true;
-      sphereMesh.position.copy(position);
-      scene.add(sphereMesh);
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Har bir ramkada tozalash
 
-      // Cannon-es shar
-      const sphereShape = new CANNON.Sphere(radius);
-      const sphereBody = new CANNON.Body({
-        mass: radius * 3,
-        shape: sphereShape,
-        position: new CANNON.Vec3(position.x, position.y, position.z),
-        material: new CANNON.Material('sphereMaterial'),
-        linearDamping: 0.01,
-        angularDamping: 0.01
-      });
-      world.addBody(sphereBody);
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
 
-      spheres.push(sphereMesh);
-      sphereBodies.push(sphereBody);
-    }
+            if (currentLetterIndex >= nameToDraw.length) {
+                // Animatsiya tugadi, to'liq yozilgan ismni ko'rsatish
+                for (let i = 0; i < nameToDraw.length; i++) {
+                    const char = nameToDraw[i];
+                    const charPaths = letterPaths[char];
+                    const offset = letterOffsets[char];
 
-    // Boshlang'ich shar
-    createSphere(new THREE.Vector3(0, 10, 0));
+                    if (charPaths) {
+                        charPaths.forEach(stroke => {
+                            ctx.beginPath();
+                            ctx.moveTo(stroke[0][0] + offset, stroke[0][1]);
+                            ctx.lineWidth = baseLineWidth + (Math.random() - 0.5) * lineWidthVariation;
+                            ctx.strokeStyle = lineColor;
+                            for (let j = 1; j < stroke.length; j++) {
+                                ctx.lineTo(stroke[j][0] + offset, stroke[j][1]);
+                            }
+                            ctx.stroke();
+                        });
+                    }
+                }
+                return; // Animatsiyani to'xtatish
+            }
 
-    // To‘qnashuv materiallari sozlamasi
-    const groundMaterial = groundBody.material;
-    const sphereMaterial = new CANNON.Material('sphereMaterial');
+            const currentLetter = nameToDraw[currentLetterIndex];
+            const letterPath = letterPaths[currentLetter];
+            const offset = letterOffsets[currentLetter];
 
-    const contactMaterial = new CANNON.ContactMaterial(groundMaterial, sphereMaterial, {
-      friction: 0.4,
-      restitution: 0.7
-    });
-    world.addContactMaterial(contactMaterial);
+            if (letterPath) {
+                // Oldingi harflarni to'liq chizish
+                for (let i = 0; i < currentLetterIndex; i++) {
+                    const prevChar = nameToDraw[i];
+                    const prevCharPaths = letterPaths[prevChar];
+                    const prevOffset = letterOffsets[prevChar];
 
-    // Oyna o‘lchamini yangilash
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+                    if (prevCharPaths) {
+                        prevCharPaths.forEach(stroke => {
+                            ctx.beginPath();
+                            ctx.moveTo(stroke[0][0] + prevOffset, stroke[0][1]);
+                            ctx.lineWidth = baseLineWidth + (Math.random() - 0.5) * lineWidthVariation;
+                            ctx.strokeStyle = lineColor;
+                            for (let j = 1; j < stroke.length; j++) {
+                                ctx.lineTo(stroke[j][0] + prevOffset, stroke[j][1]);
+                            }
+                            ctx.stroke();
+                        });
+                    }
+                }
 
-    // Sichqoncha bosilganda yangi shar qo‘shish
-    window.addEventListener('click', (event) => {
-      // Kamera qaragan yo'nalishda shar yaratish uchun raycast qilamiz
-      const mouse = new THREE.Vector2(
-        (event.clientX / window.innerWidth) * 2 - 1,
-        -(event.clientY / window.innerHeight) * 2 + 1
-      );
+                // Joriy harfning oldingi chiziqlarini to'liq chizish
+                for (let i = 0; i < currentStrokeIndex; i++) {
+                    const stroke = letterPath[i];
+                    ctx.beginPath();
+                    ctx.moveTo(stroke[0][0] + offset, stroke[0][1]);
+                    ctx.lineWidth = baseLineWidth + (Math.random() - 0.5) * lineWidthVariation;
+                    ctx.strokeStyle = lineColor;
+                    for (let j = 1; j < stroke.length; j++) {
+                        ctx.lineTo(stroke[j][0] + offset, stroke[j][1]);
+                    }
+                    ctx.stroke();
+                }
 
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
+                // Joriy chiziqni bosqichma-bosqich chizish
+                const currentStroke = letterPath[currentStrokeIndex];
+                if (currentStroke && currentStroke.length > 1) {
+                    ctx.beginPath();
+                    ctx.lineWidth = baseLineWidth + (Math.random() - 0.5) * lineWidthVariation; // Tasodifiy qalinlik
+                    ctx.strokeStyle = lineColor; // Har safar rangni qayta belgilash
 
-      // Yer yuzasiga to‘g‘ri keladigan nuqtani topamiz
-      const intersects = raycaster.intersectObject(groundMesh);
-      if (intersects.length > 0) {
-        const point = intersects[0].point;
-        // Yangi sharni yer yuzasidan 5 birlik yuqorida yaratamiz
-        createSphere(new THREE.Vector3(point.x, point.y + 5, point.z));
-      }
-    });
+                    // Birinchi nuqtadan boshlash
+                    const startX = currentStroke[0][0] + offset + getRandomJitter();
+                    const startY = currentStroke[0][1] + getRandomJitter();
+                    ctx.moveTo(startX, startY);
 
-    // Animatsiya loop
-    const clock = new THREE.Clock();
+                    const totalPoints = currentStroke.length;
+                    const pointsToDraw = Math.floor(currentPointProgress * (totalPoints - 1)) + 1;
 
-    function animate() {
-      requestAnimationFrame(animate);
+                    for (let i = 1; i < pointsToDraw; i++) {
+                        const x = currentStroke[i][0] + offset + getRandomJitter();
+                        const y = currentStroke[i][1] + getRandomJitter();
+                        ctx.lineTo(x, y);
+                    }
 
-      const delta = clock.getDelta();
-      world.step(1/60, delta, 3);
+                    // Oxirgi nuqtadan hozirgi progress bo'yicha interpolatsiya
+                    if (pointsToDraw < totalPoints) {
+                        const p1 = currentStroke[pointsToDraw - 1];
+                        const p2 = currentStroke[pointsToDraw];
+                        const t = currentPointProgress * (totalPoints - 1) - (pointsToDraw - 1);
+                        const interpolatedX = p1[0] + (p2[0] - p1[0]) * t + getRandomJitter();
+                        const interpolatedY = p1[1] + (p2[1] - p1[1]) * t + getRandomJitter();
+                        ctx.lineTo(interpolatedX + offset, interpolatedY);
+                    }
+                    ctx.stroke();
 
-      // Fizikadan Three.js ga pozitsiyalarni ko‘chirish
-      for (let i = 0; i < spheres.length; i++) {
-        spheres[i].position.copy(sphereBodies[i].position);
-        spheres[i].quaternion.copy(sphereBodies[i].quaternion);
-      }
+                    currentPointProgress += animationSpeed;
 
-      controls.update();
-      renderer.render(scene, camera);
-    }
+                    if (currentPointProgress >= 1) {
+                        currentPointProgress = 0;
+                        currentStrokeIndex++;
+                        if (currentStrokeIndex >= letterPath.length) {
+                            currentStrokeIndex = 0;
+                            currentLetterIndex++;
+                        }
+                    }
+                } else {
+                    // Agar joriy chiziq yo'q bo'lsa (masalan, bitta nuqtali chiziqlar)
+                    currentPointProgress = 0;
+                    currentStrokeIndex++;
+                    if (currentStrokeIndex >= letterPath.length) {
+                        currentStrokeIndex = 0;
+                        currentLetterIndex++;
+                    }
+                }
+            }
 
-    animate();
-  </script>
+            requestAnimationFrame(draw);
+        }
+
+        calculateLetterOffsets();
+        draw();
+    </script>
 </body>
 </html>
